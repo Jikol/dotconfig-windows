@@ -34,7 +34,7 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
   else {
     "powershell.exe"
   }
-  $process = Start-Process $shell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command $command" -Wait -Verb RunAs -PassThru
+  $process = Start-Process $shell -ArgumentList "-NoExit -NoProfile -ExecutionPolicy Bypass -Command $command" -Wait -Verb RunAs -PassThru
   if ((Test-Path $stdErrFile) -and ((Get-Item $stdErrFile).Length -ne 0)) {
     $stdErr = (Get-Content $stdErrFile) -join "`n"; Remove-Item $stdErrFile -Force
     Write-Host $stdErr -ForegroundColor Red
