@@ -16,6 +16,9 @@ function Sync-Env { $userName = $env:USERNAME; $architecture = $env:PROCESSOR_AR
 function Add-Path { param([string]$path)$currentPath = Get-Env -Name "PATH"; if ($currentPath -notlike "*$path*") { Set-Env -Name "PATH" -Value "$currentPath;$path" } }
 function New-Shortcut { param([string]$path, [string]$target, [string]$dir)$shell = New-Object -ComObject WScript.Shell; $shortcut = $shell.CreateShortcut($path); $shortcut.TargetPath = $target; $shortcut.WorkingDirectory = $dir; $shortcut.IconLocation = $target; $shortcut.Save() }
 
+Write-Host $MyInvocation.MyCommand.Path
+
+<#
 ## Leverage access control (ensuring that the script is always run as administrator, otherwise it will not run) ##
 $principal = New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())
 $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
@@ -52,6 +55,7 @@ cmd /c pause
 
 Write-Output "Returned output"
 
+#>
 <#
 
 ## Setup initialization ##
