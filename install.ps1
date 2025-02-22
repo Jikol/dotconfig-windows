@@ -53,10 +53,7 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
   }
   else { 
     $LASTEXITCODE = $process.ExitCode
-    if ($process.ExitCode -eq 1) {
-      throw  
-    }
-    return 
+    return $process.ExitCode
   }
 }
 
