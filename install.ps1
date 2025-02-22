@@ -22,12 +22,16 @@ $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 $stdErrFile = "$env:TEMP\stderr_$dateTime.log"; $stdOutFile = "$env:TEMP\stdout_$dateTime.log"
 if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
   Write-Host "Attempt to start elevated process" -ForegroundColor Yellow
-  $command = if ($MyInvocation.MyCommand.Path) {
-    "& { & '$PSCommandPath' $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"; exit `$LASTEXITCODE }"
+  $scriptPath = $null
+  if ($MyInvocation.MyCommand.Path) {
+    $scriptPath = $MyInvocation.MyCommand.Path
   }
   else {
-    "Invoke-Expression '& { $(Invoke-RestMethod https://jikol.dev/win-dev) } $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"'"
+    $scriptContent = Invoke-RestMethod -Uri "https://jikol.dev/win-dev"
+    Set-Content -Path "$env:TEMP/install.ps1" -Value $scriptContent
+    $scriptPath = "$env:TEMP/install.ps1"
   }
+  $command = "& { & '$scriptPath' $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"; exit `$LASTEXITCODE }"
   $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
     "pwsh.exe"
   }
