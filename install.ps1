@@ -1,11 +1,13 @@
 ### Script for installing & initializing tools for development in Windows 11 21H2 ###
 
 ## Global parameters ## 
+<#
 param (
   [ValidateSet("personal", "work")]
   [string]$scope,
   [switch]$backup
 )
+#>
 
 ## Helper functions ##
 function Get-Env { [OutputType([string])]param([string]$name, [System.EnvironmentVariableTarget]$scope = [System.EnvironmentVariableTarget]::User) return [Environment]::GetEnvironmentVariable($name, $scope) }
