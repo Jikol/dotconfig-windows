@@ -54,8 +54,8 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
 Write-Host "Hello from elevated process"
 Start-Sleep -Seconds 5
 
-Write-Output "Script goes succesfully"
-exit
+Write-Error "Error occured"
+exit 1
 
 <#
 
