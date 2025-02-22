@@ -47,6 +47,11 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
   exit $process.ExitCode
 }
 
+Write-Host "Hello from elevated process"
+cmd /c pause
+
+Write-Output "Returned output"
+
 <#
 
 ## Setup initialization ##
@@ -310,6 +315,3 @@ pause
 [System.Environment]::Exit(0)
 
 #>
-
-Write-Output "Output"
-exit

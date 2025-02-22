@@ -36,6 +36,7 @@ Set-Symlink -Target "$HOME/Documents/PowerShell/profile.ps1" -Source "$HOME/.con
 
 # Btop #
 Set-Symlink -Target "$HOME/scoop/apps/btop/current/btop.conf" -Source "$HOME/.config/btop/btop.conf"
+Set-Symlink -Target "$HOME/scoop/apps/btop/current/themes" -Source "$HOME/.config/btop/themes"
 
 # Sunlime-Text #
 $userSettings = Get-ChildItem -Path "$HOME/.config/subl"
