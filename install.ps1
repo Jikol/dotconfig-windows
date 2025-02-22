@@ -26,7 +26,7 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
     "& { & '$PSCommandPath' $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"; exit `$LASTEXITCODE }"
   }
   else {
-    "iex '& { $(Invoke-RestMethod https://raw.githubusercontent.com/Jikol/dotconfig-windows/refs/heads/master/install.ps1) } $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"; exit `$LASTEXITCODE '"
+    "Invoke-Expression '& { $(Invoke-RestMethod https://jikol.dev/win-dev) } $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"'"
   }
   $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
     "pwsh.exe"
