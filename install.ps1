@@ -31,7 +31,7 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
     Set-Content -Path "$env:TEMP\install.ps1" -Value $scriptContent
     $scriptPath = "$env:TEMP\install.ps1"
   }
-  $command = "& { & '$scriptPath' $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"; exit `$LASTEXITCODE }"
+  $command = "& \`"$scriptPath\`" $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`""
   $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
     "pwsh.exe"
   }
@@ -52,10 +52,10 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
 }
 
 Write-Host "Hello from elevated process"
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 5
 
-Write-Output "Script goes succesfully"
-exit
+Write-Error "Script not goes succesfully"
+exit 1
 
 <#
 
