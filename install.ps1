@@ -16,9 +16,6 @@ function Sync-Env { $userName = $env:USERNAME; $architecture = $env:PROCESSOR_AR
 function Add-Path { param([string]$path)$currentPath = Get-Env -Name "PATH"; if ($currentPath -notlike "*$path*") { Set-Env -Name "PATH" -Value "$currentPath;$path" } }
 function New-Shortcut { param([string]$path, [string]$target, [string]$dir)$shell = New-Object -ComObject WScript.Shell; $shortcut = $shell.CreateShortcut($path); $shortcut.TargetPath = $target; $shortcut.WorkingDirectory = $dir; $shortcut.IconLocation = $target; $shortcut.Save() }
 
-Write-Host $MyInvocation.MyCommand.Path
-
-<#
 ## Leverage access control (ensuring that the script is always run as administrator, otherwise it will not run) ##
 $principal = New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())
 $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
@@ -37,6 +34,8 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
   else {
     "powershell.exe"
   }
+  Write-Host $command
+  <#
   $process = Start-Process $shell -ArgumentList "-NoExit -NoProfile -ExecutionPolicy Bypass -Command $command" -Wait -Verb RunAs -PassThru
   if ((Test-Path $stdErrFile) -and ((Get-Item $stdErrFile).Length -ne 0)) {
     $stdErr = (Get-Content $stdErrFile) -join "`n"; Remove-Item $stdErrFile -Force
@@ -48,14 +47,9 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
   }
   Write-Output $process.ExitCode
   exit $process.ExitCode
+  #>
 }
 
-Write-Host "Hello from elevated process"
-cmd /c pause
-
-Write-Output "Returned output"
-
-#>
 <#
 
 ## Setup initialization ##
