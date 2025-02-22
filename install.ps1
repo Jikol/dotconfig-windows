@@ -52,8 +52,9 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
     exit $process.ExitCode 
   }
   else { 
-    $LASTEXITCODE = $process.ExitCode
-    return $process.ExitCode
+    $global:LASTEXITCODE = $process.ExitCode
+    if ($process.ExitCode -ne 0) { [Environment]::Exit($process.ExitCode) }
+    return
   }
 }
 
