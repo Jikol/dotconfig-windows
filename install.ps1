@@ -28,8 +28,8 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
   }
   else {
     $scriptContent = Invoke-RestMethod -Uri "https://jikol.dev/win-dev"
-    Set-Content -Path "$env:TEMP/install.ps1" -Value $scriptContent
-    $scriptPath = "$env:TEMP/install.ps1"
+    Set-Content -Path "$env:TEMP\install.ps1" -Value $scriptContent
+    $scriptPath = "$env:TEMP\install.ps1"
   }
   $command = "& { & '$scriptPath' $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"; exit `$LASTEXITCODE }"
   $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
@@ -38,9 +38,7 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
   else {
     "powershell.exe"
   }
-  Write-Host $command
-  <#
-  $process = Start-Process $shell -ArgumentList "-NoExit -NoProfile -ExecutionPolicy Bypass -Command $command" -Wait -Verb RunAs -PassThru
+  $process = Start-Process $shell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command $command" -Wait -Verb RunAs -PassThru
   if ((Test-Path $stdErrFile) -and ((Get-Item $stdErrFile).Length -ne 0)) {
     $stdErr = (Get-Content $stdErrFile) -join "`n"; Remove-Item $stdErrFile -Force
     Write-Host $stdErr -ForegroundColor Red
@@ -51,8 +49,13 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
   }
   Write-Output $process.ExitCode
   exit $process.ExitCode
-  #>
 }
+
+Write-Host "Hello from elevated process"
+Start-Sleep -Seconds 10
+
+Write-Output "Script goes succesfully"
+exit
 
 <#
 
