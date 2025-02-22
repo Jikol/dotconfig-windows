@@ -48,14 +48,14 @@ if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Admini
     Write-Host $stdOut -ForegroundColor Green
   }
   Write-Output $process.ExitCode
-  if ($MyInvocation.MyCommand.Path) { exit $process.ExitCode } else { return }
+  if ($MyInvocation.MyCommand.Path) { exit $process.ExitCode } else { $LASTEXITCODE = $process.ExitCode; return }
 }
 
 Write-Host "Hello from elevated process"
 Start-Sleep -Seconds 5
 
-Write-Error "Error occured"
-exit 1
+Write-Output "Error occured"
+exit
 
 <#
 
