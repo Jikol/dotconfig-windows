@@ -8,42 +8,44 @@ param (
 )
 
 ## Helper functions ##
-function Get-Env { [OutputType([string])]param([string]$name, [System.EnvironmentVariableTarget]$scope = [System.EnvironmentVariableTarget]::User)return [Environment]::GetEnvironmentVariable($name, $scope) } # noqa: *
-function Set-Env { param([string]$name, [string]$value, [switch]$delete, [System.EnvironmentVariableTarget]$scope = [System.EnvironmentVariableTarget]::User)if ($delete) { [Environment]::SetEnvironmentVariable($name, $null, $scope) }[Environment]::SetEnvironmentVariable($name, $value, $scope) }
+function Get-Env { [OutputType([string])]param([string]$name, [System.EnvironmentVariableTarget]$scope = [System.EnvironmentVariableTarget]::User) return [Environment]::GetEnvironmentVariable($name, $scope) }
+function Set-Env { param([string]$name, [string]$value, [switch]$delete, [System.EnvironmentVariableTarget]$scope = [System.EnvironmentVariableTarget]::User) if ($delete) { [Environment]::SetEnvironmentVariable($name, $null, $scope) } [Environment]::SetEnvironmentVariable($name, $value, $scope) }
 function Sync-Env { $userName = $env:USERNAME; $architecture = $env:PROCESSOR_ARCHITECTURE; $psModulePath = $env:PSModulePath; $scopeList = "Process", "Machine"; if ("SYSTEM", "${env:COMPUTERNAME}`$" -notcontains $userName) { $scopeList += "User" }foreach ($scope in $scopeList) { $envList = [string]::Empty; switch ($scope) { "User" { $envList = Get-Item "HKCU:\Environment" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Property }"Machine" { $envList = Get-Item "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" | Select-Object -ExpandProperty Property }"Process" { $envList = Get-ChildItem Env:\ | Select-Object -ExpandProperty Key } }; $envList | ForEach-Object { Set-Item "Env:$_"-Value(Get-Env -scope $scope -name $_) } }; $paths = "Machine", "User" | ForEach-Object { (Get-Env -name "Path" -scope $_) -split ';' } | Select-Object -Unique; $env:Path = $paths -join ';'; $env:PSModulePath = $psModulePath; if ($userName) { $env:USERNAME = $userName }; if ($architecture) { $env:PROCESSOR_ARCHITECTURE = $architecture } }
 function Add-Path { param([string]$path)$currentPath = Get-Env -Name "PATH"; if ($currentPath -notlike "*$path*") { Set-Env -Name "PATH" -Value "$currentPath;$path" } }
 function New-Shortcut { param([string]$path, [string]$target, [string]$dir)$shell = New-Object -ComObject WScript.Shell; $shortcut = $shell.CreateShortcut($path); $shortcut.TargetPath = $target; $shortcut.WorkingDirectory = $dir; $shortcut.IconLocation = $target; $shortcut.Save() }
-function Stop-Execution { param([string]$message)Write-Host $message -ForegroundColor Red; Stop-Transcript; pause; Set-Env -Name "EXIT_MESSAGE" -Value $message; Stop-Process -Id $PID -Force }
 
 ## Leverage access control (ensuring that the script is always run as administrator, otherwise it will not run) ##
 $principal = New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())
+$dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+$stdErrFile = "$env:TEMP\stderr_$dateTime.log"; $stdOutFile = "$env:TEMP\stdout_$dateTime.log"
 if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
   Write-Host "Attempt to start elevated process" -ForegroundColor Yellow
-  try {
-    $scriptPath = $null
-    if ($MyInvocation.MyCommand.Path) {
-      $scriptPath = $MyInvocation.MyCommand.Path
-    }
-    else {
-      $scriptContent = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Jikol/dotconfig-windows/refs/heads/master/install.ps1"
-      Set-Content -Path "$env:TEMP/install.ps1" -Value $scriptContent
-      $scriptPath = "$env:TEMP/install.ps1"
-    }
-    $proc = Start-Process powershell.exe -ArgumentList "-NoExit -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`"" -Verb RunAs -PassThru
-    if ($null -eq $proc) { throw "Could not start the elevated process" }
-    $proc.WaitForExit()
-    if ($proc.ExitCode -ne 0) { throw "Script execution failed: $(Get-Env -Name "EXIT_MESSAGE")" }
-    Write-Host "Installation script run succesfully" -ForegroundColor Green
-
-    if ($MyInvocation.MyCommand.Path) { exit } else { return }
+  $command = if ($MyInvocation.MyCommand.Path) {
+    "& { & '$PSCommandPath' $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"; exit `$LASTEXITCODE }"
   }
-  catch {
-    Write-Host "$_" -ForegroundColor Red
-    Set-Env -Name "EXIT_MESSAGE" -Delete
-
-    if ($MyInvocation.MyCommand.Path) { exit 1 } else { return }
+  else {
+    "iex '& { $(Invoke-RestMethod https://raw.githubusercontent.com/Jikol/dotconfig-windows/refs/heads/master/install.ps1) } $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`"; exit `$LASTEXITCODE '"
   }
+  $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
+    "pwsh.exe"
+  }
+  else {
+    "powershell.exe"
+  }
+  $process = Start-Process $shell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command $command" -Wait -Verb RunAs -PassThru
+  if ((Test-Path $stdErrFile) -and ((Get-Item $stdErrFile).Length -ne 0)) {
+    $stdErr = (Get-Content $stdErrFile) -join "`n"; Remove-Item $stdErrFile -Force
+    Write-Host $stdErr -ForegroundColor Red
+  }
+  if ((Test-Path $stdOutFile) -and ((Get-Item $stdOutFile).Length -ne 0)) {
+    $stdOut = Get-Content $stdOutFile; Remove-Item $stdOutFile -Force
+    Write-Host $stdOut -ForegroundColor Green
+  }
+  Write-Output $process.ExitCode
+  exit $process.ExitCode
 }
+
+<#
 
 ## Setup initialization ##
 
@@ -304,3 +306,8 @@ Stop-Transcript
 
 pause
 [System.Environment]::Exit(0)
+
+#>
+
+Write-Output "Output"
+exit

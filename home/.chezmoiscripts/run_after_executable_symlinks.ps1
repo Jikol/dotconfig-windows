@@ -6,7 +6,7 @@ function Invoke-SelfRunAs {
   $dateTime = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
   $stdErrFile = "$env:TEMP\stderr_$dateTime.log"; $stdOutFile = "$env:TEMP\stdout_$dateTime.log"
   if (! $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    $command = "& \`"$PSCommandPath\`" 2>\`"$stdErrFile\`" >\`"$stdOutFile\`""
+    $command = "& { & '$PSCommandPath' $argList 2>\`"$stdErrFile\`" >\`"$stdOutFile\`" }"
     $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
       "pwsh.exe"
     }
